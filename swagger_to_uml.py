@@ -197,10 +197,15 @@ class Definition:
             ))
 
         if not 'type' in d:
-            print('required key "type" not found in dictionary ' + json.dumps(d), file=sys.stderr)
+            # print('===================> required key "type" not found in dictionary ' + json.dumps(d), file=sys.stderr)
+            # import pdb
+            # pdb.set_trace()
+            t = 'object'
+        else:
+            t = d['type']
 
         return Definition(name=name,
-                          type=d['type'],
+                          type=t,
                           properties=properties,
                           relationships={property.ref_type for property in properties if property.ref_type})
 
@@ -308,11 +313,14 @@ class Operation:
         references = [x.property.ref_type for x in self.responses if x.property.ref_type] + \
                      [x.property.ref_type for x in self.parameters if x.property.ref_type]
 
+        import pdb
+        pdb.set_trace()
+
         return """class "{name}" {{\n{parameter_str}\n.. responses ..\n{response_str}\n}}\n\n{associations}\n""".format(
             name=self.name,
             response_str='\n'.join([x.uml for x in self.responses]),
             parameter_str='\n'.join(parameter_strings),
-            associations='\n'.join({'"{name}" ..> {type}'.format(name=self.name, type=type) for type in references})
+            associations='\n'.join({'"{name}" --> {type}'.format(name=self.name, type=type) for type in references})
         )
 
     @property
@@ -350,6 +358,12 @@ class Swagger:
     def __init__(self, definitions, paths):
         self.definitions = definitions  # type: List[Definition]
         self.paths = paths  # type: List[Path]
+        _paths = []
+        for p in paths:
+            if p.path == '/product':
+                _paths.append(p)
+
+        self.paths = _paths
 
     @staticmethod
     def from_dict(d):
